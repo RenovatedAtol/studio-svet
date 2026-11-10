@@ -82,17 +82,19 @@ h3 { font-weight: 500; font-size: 1.3rem; letter-spacing: -.01em; }
    Поле считается от ширины блока (%), а не окна (vw), поэтому текст всегда стоит на той же
    линии, что логотип и остальные разделы, и не наезжает на фото ни на каком мониторе. */
 .hero {
-  display: grid;
+  display: grid; align-items: center;
   grid-template-columns: max(20px, (100% - 1180px) / 2) minmax(0, 5fr) minmax(0, 7fr);
-  min-height: min(100svh, 880px); padding-top: var(--header-h);
+  padding-top: var(--header-h);
 }
-.hero > .container { grid-column: 2; grid-row: 1; width: auto; margin: 0; display: flex; align-items: flex-end;
-  padding: 48px clamp(24px, 3.5vw, 56px) clamp(48px, 9vh, 96px) 0; }
+.hero > .container { grid-column: 2; grid-row: 1; width: auto; margin: 0;
+  padding: 48px clamp(28px, 4vw, 72px) 48px 0; }
 .hero__content { max-width: 34rem; min-width: 0; }
 .hero h1 { font-size: clamp(2.6rem, 4.6vw, 5.2rem); margin-bottom: .35em; overflow-wrap: break-word; }
 .hero__subtitle { font-size: 1.2rem; line-height: 1.55; color: var(--muted); margin: 0 0 2em; max-width: 30em; }
 .hero__actions { display: flex; gap: 12px; flex-wrap: wrap; }
-.hero__bg { grid-column: 3; grid-row: 1; background: var(--seamless) center / cover no-repeat; min-height: 360px; }
+/* Фото целиком, в своих пропорциях. Обрезка только если окно ниже самого фото (очень низкий экран). */
+.hero__media { grid-column: 3; grid-row: 1; margin: 0; background: var(--seamless); }
+.hero__media img { width: 100%; height: auto; max-height: calc(100svh - var(--header-h)); object-fit: cover; cursor: zoom-in; }
 
 /* ───── секции ───── */
 .section { padding: clamp(64px, 9vw, 112px) 0; }
@@ -282,8 +284,9 @@ textarea { resize: vertical; }
 
 /* ───── адаптив ───── */
 @media (max-width: 900px) {
-  .hero { grid-template-columns: 1fr; min-height: 0; }
-  .hero__bg { grid-column: 1; grid-row: 1; min-height: 0; height: 34svh; }
+  .hero { grid-template-columns: 1fr; }
+  .hero__media { grid-column: 1; grid-row: 1; }
+  .hero__media img { max-height: none; }
   .about__inner { grid-template-columns: 1fr; }
   .hero > .container { grid-column: 1; grid-row: 2; width: min(1180px, 100% - 40px); margin: 0 auto; padding: 32px 0 8px; }
   .hero h1 { font-size: clamp(2.6rem, 11vw, 4rem); }

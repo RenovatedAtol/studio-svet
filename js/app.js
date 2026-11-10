@@ -98,6 +98,7 @@
     var grid = $('#galleryGrid');
     grid.innerHTML = '';
     photos.forEach(function (p, i) {
+      if (i === 0 && photos.length > 1) return; // первое фото уже на первом экране — в галерее не повторяем
       var btn = document.createElement('button');
       btn.type = 'button';
       btn.className = 'gallery__item';
@@ -111,7 +112,16 @@
       btn.addEventListener('click', function () { openLightbox(i); });
       grid.appendChild(btn);
     });
-    if (photos[0]) $('#heroBg').style.backgroundImage = 'url("' + photoUrl(photos[0], 2000) + '")';
+    if (photos[0]) {
+      var hero = $('#heroImg'), src = photoUrl(photos[0], 2000);
+      if (hero.getAttribute('src') !== src) {
+        // размеры для нового фото ставим после загрузки — пропорции всегда настоящие, без обрезки
+        var probe = new Image();
+        probe.onload = function () { hero.width = probe.naturalWidth; hero.height = probe.naturalHeight; hero.src = src; };
+        probe.src = src;
+      }
+      hero.alt = photos[0].alt || '';
+    }
   }
 
   var lb = $('#lightbox'), lbImg = $('#lbImg'), lbIndex = 0, lastFocus = null;
@@ -136,6 +146,7 @@
     document.body.classList.remove('no-scroll');
     if (lastFocus) lastFocus.focus();
   }
+  $('#heroImg').addEventListener('click', function () { if (content.photos && content.photos.length) openLightbox(0); });
   $('#lbClose').addEventListener('click', closeLightbox);
   $('#lbPrev').addEventListener('click', function () { showLb(lbIndex - 1); });
   $('#lbNext').addEventListener('click', function () { showLb(lbIndex + 1); });
