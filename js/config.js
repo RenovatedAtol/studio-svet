@@ -8,5 +8,5 @@
  * свободное время генерируется случайно, заявки никуда не отправляются.
  */
 window.SITE_CONFIG = {
-  API_URL: ''
+  API_URL: 'https://script.google.com/macros/s/AKfycbziQqGun-hKOkk-e-TMl-lbWbWEFgfwQxQV9oKlHgujsqZq0H_2LWZJc-b7mVfgmROH/exec'
 };
