@@ -497,6 +497,7 @@
       }
       var when = Array.isArray(res.when) ? res.when : [res.when || ''];
       $('#doneWhen').innerHTML = when.map(esc).join('<br>');
+      setupTelegramSubscribe(res.tgLink, res.tgCode);
       $('#bookingBody').hidden = true;
       $('#bookingDone').hidden = false;
       $('#booking').scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -511,7 +512,42 @@
     });
   });
 
+  // ───────────── подписка клиента на напоминания в Telegram ─────────────
+  var tgPoll = { timer: null, until: 0, code: null };
+
+  function setupTelegramSubscribe(link, code) {
+    stopTgPolling();
+    $('#tgSubOk').hidden = true;
+    $('#tgSub').hidden = !link;
+    if (!link) return;
+    $('#tgSubBtn').href = link;
+    tgPoll.code = code;
+  }
+  function stopTgPolling() { clearTimeout(tgPoll.timer); tgPoll.timer = null; }
+  function checkTg() {
+    if (!tgPoll.code || Date.now() > tgPoll.until) return stopTgPolling();
+    apiGet({ action: 'tgcheck', code: tgPoll.code }).then(function (res) {
+      if (res && res.linked) {
+        stopTgPolling();
+        $('#tgSub').hidden = true;
+        $('#tgSubOk').hidden = false;
+        return;
+      }
+      tgPoll.timer = setTimeout(checkTg, 3000);
+    }).catch(function () { tgPoll.timer = setTimeout(checkTg, 5000); });
+  }
+  $('#tgSubBtn').addEventListener('click', function () {
+    tgPoll.until = Date.now() + 5 * 60000;   // ждём подключения до 5 минут
+    stopTgPolling();
+    tgPoll.timer = setTimeout(checkTg, 2500);
+  });
+  document.addEventListener('visibilitychange', function () {
+    // вернулись из Telegram — проверить сразу
+    if (!document.hidden && tgPoll.timer) { stopTgPolling(); checkTg(); }
+  });
+
   $('#bookAgain').addEventListener('click', function () {
+    stopTgPolling();
     $('#bookingDone').hidden = true;
     $('#bookingBody').hidden = false;
     updateSummary();

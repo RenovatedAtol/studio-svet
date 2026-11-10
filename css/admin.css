@@ -112,3 +112,11 @@
   .admin .logo { display: none; }
   .admin-nav { width: 100%; justify-content: space-between; }
 }
+
+.bell { font-size: 12px; }
+.icon-btn--link:hover { border-color: #b7d3ee; color: #2b5a8a; background: #e8f1fa; }
+.cell-actions { white-space: nowrap; width: 76px; }
+.ev__actions { display: flex; gap: 2px; align-items: center; }
+.tg-seen { margin-top: 16px; }
+.tg-seen h3 { font-size: 1.3rem; margin: 0 0 4px; }
+#tgHint { line-height: 1.6; }

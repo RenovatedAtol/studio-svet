@@ -103,6 +103,30 @@
 
   var SOURCE = { site: 'сайт', admin: 'админка', calendar: 'календарь' };
 
+  /** Кнопка «ссылка для клиента» — у будущих записей, где клиент ещё не подключил напоминания. */
+  function linkBtn(e) {
+    if (e.type !== 'booking' || e.subscribed || e.recurring || new Date(e.end) < new Date()) return '';
+    return '<button type="button" class="icon-btn icon-btn--link" data-tglink="' + esc(e.id) + '" data-hall="' + e.hall +
+      '" title="Скопировать ссылку для клиента: напоминания в Telegram">🔗</button>';
+  }
+
+  function copyText(text) {
+    if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(text);
+    return Promise.reject(new Error('no clipboard'));
+  }
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-tglink]');
+    if (!b) return;
+    b.disabled = true;
+    call('tg_link', { id: b.dataset.tglink, hall: +b.dataset.hall }).then(function (res) {
+      b.disabled = false;
+      if (!res.ok) return alert(res.error);
+      var msg = 'Подключите напоминания о записи в Telegram: ' + res.url;
+      copyText(msg).then(function () { toast('Ссылка скопирована — отправьте её клиенту'); })
+        .catch(function () { prompt('Скопируйте и отправьте клиенту:', msg); });
+    }).catch(function () { b.disabled = false; });
+  });
+
   function renderList() {
     var q = list.q.toLowerCase();
     var rows = list.events.filter(function (e) {
@@ -117,7 +141,7 @@
       prevDate = e.date;
       var who = e.type === 'block'
         ? '<span class="badge badge--block">Закрыто</span>'
-        : esc(e.name || e.title);
+        : esc(e.name || e.title) + (e.subscribed ? ' <span class="bell" title="Получит напоминания в Telegram">🔔</span>' : '');
       var phone = e.phone ? '<a href="tel:' + esc(e.phone.replace(/[^\d+]/g, '')) + '">' + esc(e.phone) + '</a>' : '';
       return '<tr class="' + (newDay ? 'row--newday ' : '') + (e.type === 'block' ? 'row--block' : '') + '">' +
         '<td data-label="Дата"><b>' + esc(e.dateLabel) + '</b>' + (multiHall ? '<br><small class="muted">' + esc(e.hallName) + '</small>' : '') + '</td>' +
@@ -127,7 +151,7 @@
         '<td data-label="Обор.">' + (e.equipment === 'да' ? '✓' : '') + '</td>' +
         '<td data-label="Комментарий" class="cell-comment">' + esc(e.comment) + '</td>' +
         '<td data-label="Откуда"><span class="badge badge--' + esc(e.source) + '">' + (SOURCE[e.source] || esc(e.source)) + '</span></td>' +
-        '<td class="cell-actions">' + (e.recurring ? '<small class="muted" title="Повторяющееся — меняется в Google Календаре">повтор.</small>' :
+        '<td class="cell-actions">' + linkBtn(e) + (e.recurring ? '<small class="muted" title="Повторяющееся — меняется в Google Календаре">повтор.</small>' :
           '<button type="button" class="icon-btn" data-del="' + esc(e.id) + '" data-hall="' + e.hall + '" title="Удалить">✕</button>') + '</td>' +
         '</tr>';
     }).join('') : '<tr><td colspan="8" class="muted">Ничего не найдено</td></tr>';
@@ -308,11 +332,11 @@
         '<div class="ev__time">' + esc(e.time) + '</div>' +
         '<div class="ev__body">' + (e.type === 'block'
           ? '<b>Закрыто</b>' + (e.comment ? ' — ' + esc(e.comment) : '')
-          : '<b>' + esc(e.name || e.title) + '</b>' + (e.phone ? ' · <a href="tel:' + esc(e.phone.replace(/[^\d+]/g, '')) + '">' + esc(e.phone) + '</a>' : '') +
+          : '<b>' + esc(e.name || e.title) + '</b>' + (e.subscribed ? ' <span class="bell" title="Получит напоминания в Telegram">🔔</span>' : '') + (e.phone ? ' · <a href="tel:' + esc(e.phone.replace(/[^\d+]/g, '')) + '">' + esc(e.phone) + '</a>' : '') +
             (e.equipment === 'да' ? ' · доп. оборудование' : '') + (e.comment ? '<br><small>' + esc(e.comment) + '</small>' : '')) +
         ' <span class="badge badge--' + esc(e.source) + '">' + (SOURCE[e.source] || esc(e.source)) + '</span></div>' +
-        (e.recurring ? '<small class="muted">повтор.</small>' : '<button type="button" class="icon-btn" data-del="' + esc(e.id) + '" data-hall="' + planner.hall + '" title="Удалить">✕</button>') +
-        '</div>';
+        '<div class="ev__actions">' + linkBtn(e) + (e.recurring ? '<small class="muted">повтор.</small>' : '<button type="button" class="icon-btn" data-del="' + esc(e.id) + '" data-hall="' + planner.hall + '" title="Удалить">✕</button>') +
+        '</div></div>';
     }).join('') : '';
   }
 
@@ -422,8 +446,12 @@
   // ───────────── Telegram ─────────────
   function renderTg(res) {
     var bot = res.bot ? '<a href="https://t.me/' + esc(res.bot) + '" target="_blank" rel="noopener">@' + esc(res.bot) + '</a>' : 'бота';
-    $('#tgHint').innerHTML = 'Кому приходят уведомления о новых записях с сайта и напоминания за час до начала. ' +
-      'Чтобы добавить человека: впишите его ник ниже, а он пусть откроет ' + bot + ' и нажмёт «Старт» — подключится автоматически в течение 5 минут.' +
+    $('#tgHint').innerHTML =
+      '<b>Админам</b> (список ниже) приходит каждая новая запись с сайта' +
+      (res.digestTime ? ' и каждый день в ' + esc(res.digestTime) + ' — сводка записей на завтра' : '') + '.<br>' +
+      '<b>Клиентам</b> ' + (res.clientReminders ? 'бот напоминает за сутки и за час до записи — если клиент подключился: после записи на сайте ему показывается кнопка, ' +
+        'а для записей из админки нажмите 🔗 и отправьте клиенту ссылку. 🔔 — клиент подключён.' : 'напоминания выключены (лист «Параметры записи» → client_reminders).') +
+      '<br><small>Добавить админа: впишите его @ник, а он пусть откроет ' + bot + ' и нажмёт «Старт» — подключится в течение минуты.</small>' +
       (res.configured ? '' : '<br><b>Бот ещё не подключён: в Google-таблице выберите «📸 Фотостудия → 2. Telegram: ввести токен бота».</b>') +
       (res.warning ? '<br><small>Telegram: ' + esc(res.warning) + '</small>' : '');
     $('#tgList').innerHTML = res.recipients.length ? res.recipients.map(function (r) {
@@ -432,7 +460,19 @@
         (r.connected ? '<span class="badge badge--ok">✓ подключён</span>' : '<span class="badge badge--wait">ждём «Старт» у бота</span>') +
         '<button type="button" class="icon-btn" data-tg-remove="' + esc(r.key) + '" title="Убрать">✕</button></li>';
     }).join('') : '<li class="muted">Пока никого — уведомления никуда не уходят.</li>';
+    var seen = res.seen || [];
+    $('#tgSeen').hidden = !seen.length;
+    $('#tgSeenList').innerHTML = seen.map(function (x) {
+      return '<li><span class="tg-who">' + esc(x.name || x.username || x.id) + (x.username ? ' <span class="muted">@' + esc(x.username) + '</span>' : '') +
+        (x.group ? ' <span class="badge">группа</span>' : '') + '</span>' +
+        '<button type="button" class="btn btn--small btn--ghost" data-tg-seen="' + esc(x.id) + '">Сделать админом</button></li>';
+    }).join('');
   }
+  $('#tgSeenList').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-tg-seen]');
+    if (!b || !confirm('Этот человек будет получать уведомления о всех записях (имена и телефоны клиентов). Добавить?')) return;
+    call('tg_add_seen', { id: b.dataset.tgSeen }).then(function (res) { if (res.ok) renderTg(res); else alert(res.error); });
+  });
   function loadTg() {
     return call('tg_list').then(function (res) { if (res.ok) renderTg(res); });
   }

@@ -127,7 +127,7 @@
         <h2>Уведомления в Telegram</h2>
         <button type="button" class="btn btn--small btn--ghost" id="tgTest">Отправить тест</button>
       </div>
-      <p class="muted" id="tgHint">Кому приходят уведомления о новых записях с сайта и напоминания за час до начала.</p>
+      <p class="muted" id="tgHint">Загрузка…</p>
       <div class="card">
         <ul class="tg-list" id="tgList"><li class="muted">Загрузка…</li></ul>
         <form class="tg-add" id="tgAdd">
@@ -135,6 +135,11 @@
           <button type="submit" class="btn btn--small">Добавить</button>
         </form>
         <p class="form__error" id="tgError" role="alert" hidden></p>
+      </div>
+      <div class="card tg-seen" id="tgSeen" hidden>
+        <h3>Недавно писали боту</h3>
+        <p class="muted small">Например, если у человека нет @ника — пусть напишет боту, и его можно добавить отсюда.</p>
+        <ul class="tg-list" id="tgSeenList"></ul>
       </div>
     </section>
   </div>

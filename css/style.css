@@ -254,3 +254,11 @@ textarea { resize: vertical; }
 .sum__total { margin-top: 6px; padding-top: 6px; border-top: 1px solid rgba(138,106,63,.25); font-weight: 600; }
 .sum__hall { font-weight: 600; margin-bottom: 4px; }
 .link-btn { justify-self: start; margin-top: -6px; padding: 0; border: 0; background: none; color: var(--accent); font: 500 14px/1.4 var(--sans); cursor: pointer; text-decoration: underline; }
+
+/* ───── подписка на напоминания в Telegram ───── */
+.tg-sub { margin: 22px auto; padding: 18px 20px; max-width: 420px; border-radius: 12px; background: var(--bg); text-align: center; }
+.tg-sub p { margin: 0 0 12px; }
+.tg-sub__hint { margin: 10px 0 0 !important; font-size: 13px; }
+.tg-sub--ok { background: #e3efe3; color: #2f6b34; font-weight: 500; }
+.btn--tg { background: #2aabee; border-color: #2aabee; color: #fff; }
+.btn--tg:hover { background: #1e96d4; border-color: #1e96d4; }
