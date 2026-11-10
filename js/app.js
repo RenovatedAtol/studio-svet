@@ -187,98 +187,33 @@
   }
 
   // ───────────── запись ─────────────
-  var state = { hall: 0, days: [], day: 0, slot: null };
-  var slotsEl = $('#slots'), dayTabs = $('#dayTabs'), hallTabs = $('#hallTabs');
-  var durWrap = $('#durationWrap'), durSel = $('#duration');
+  var MONTHS_GEN = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
+  var MONTHS_NOM = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
+  var WD_SHORT = ['вс', 'пн', 'вт', 'ср', 'чт', 'пт', 'сб'];
+
+  var state = {
+    hall: 0,
+    month: null,      // 'yyyy-MM' — показанный месяц
+    data: null,       // ответ сервера по этому месяцу
+    meta: null,       // правила записи из последнего ответа
+    cache: {},        // 'hall|month' → ответ
+    day: null,        // 'yyyy-MM-dd' — открытый день
+    selected: {}      // start ISO → {date, time, ms}
+  };
+  var calEl = $('#cal'), slotsEl = $('#slots'), daySlots = $('#daySlots'), hallTabs = $('#hallTabs');
   var form = $('#bookingForm'), submitBtn = $('#submitBtn'), errEl = $('#formError');
-
-  function renderHalls(halls) {
-    hallTabs.hidden = halls.length < 2;
-    hallTabs.innerHTML = halls.map(function (h, i) {
-      return '<button type="button" role="tab" class="tab' + (i === state.hall ? ' tab--active' : '') +
-        '" data-hall="' + i + '" aria-selected="' + (i === state.hall) + '">' + esc(h.name) + '</button>';
-    }).join('');
-  }
-  hallTabs.addEventListener('click', function (e) {
-    var b = e.target.closest('[data-hall]');
-    if (!b) return;
-    state.hall = +b.dataset.hall;
-    renderHalls(content.halls);
-    loadSlots();
-  });
-
-  function loadSlots() {
-    state.slot = null;
-    form.hidden = false;
-    $('#bookingBody').classList.remove('booking__body--closed');
-    updateSummary();
-    slotsEl.innerHTML = '<p class="muted">Загружаем свободное время…</p>';
-    dayTabs.innerHTML = '';
-    var p = DEMO ? Promise.resolve(demoSlots()) : apiGet({ action: 'slots', hall: state.hall });
-    return p.then(function (res) {
-      if (!res.ok) throw new Error(res.error);
-      state.days = res.days;
-      state.day = 0;
-      if (res.closed) return renderClosed(res.reopens);
-      renderDays();
-    }).catch(function () {
-      slotsEl.innerHTML = '<p class="muted">Не удалось загрузить расписание. Позвоните нам: <a href="' +
-        $('[data-link="phone"]').href + '">' + esc($('[data-link="phone"]').textContent) + '</a></p>';
-    });
-  }
 
   function phoneLinkHtml() {
     var a = $('[data-link="phone"]');
     return '<a href="' + a.href + '">' + esc(a.textContent) + '</a>';
   }
-
-  function renderClosed(reopens) {
-    dayTabs.innerHTML = '';
-    form.hidden = true;
-    $('#bookingBody').classList.add('booking__body--closed');
-    slotsEl.innerHTML = '<div class="closed-note"><b>Онлайн-запись откроется ' + esc(reopens) + '.</b>' +
-      '<span>Сейчас мы составляем расписание на следующий месяц. Если нужно срочно — позвоните: ' + phoneLinkHtml() + '</span></div>';
+  function parseDate(str) { var p = str.split('-'); return new Date(+p[0], +p[1] - 1, +(p[2] || 1)); }
+  function dateLabel(str) { var d = parseDate(str); return d.getDate() + ' ' + MONTHS_GEN[d.getMonth()] + ', ' + WD_SHORT[d.getDay()]; }
+  function shiftMonth(month, n) { var d = parseDate(month); d.setMonth(d.getMonth() + n); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'); }
+  function addMinutes(hhmm, minutes) {
+    var p = hhmm.split(':'), t = ((+p[0]) * 60 + (+p[1]) + minutes) % 1440;
+    return String(Math.floor(t / 60)).padStart(2, '0') + ':' + String(t % 60).padStart(2, '0');
   }
-
-  function renderDays() {
-    if (!state.days.length) {
-      dayTabs.innerHTML = '';
-      slotsEl.innerHTML = '<p class="muted">На ближайшие двое суток свободного времени нет. Позвоните нам — постараемся что-нибудь придумать.</p>';
-      return;
-    }
-    dayTabs.innerHTML = state.days.map(function (d, i) {
-      var parts = d.label.split(' · ');
-      return '<button type="button" role="tab" class="tab' + (i === state.day ? ' tab--active' : '') +
-        '" data-day="' + i + '" aria-selected="' + (i === state.day) + '"><b>' + esc(parts[0]) + '</b>' +
-        (parts[1] ? '<small>' + esc(parts[1]) + '</small>' : '') + '</button>';
-    }).join('');
-    renderSlots();
-  }
-  dayTabs.addEventListener('click', function (e) {
-    var b = e.target.closest('[data-day]');
-    if (!b) return;
-    state.day = +b.dataset.day;
-    state.slot = null;
-    renderDays();
-    updateSummary();
-  });
-
-  function renderSlots() {
-    var day = state.days[state.day];
-    slotsEl.innerHTML = day.slots.map(function (s, i) {
-      var active = state.slot && state.slot.start === s.start;
-      return '<button type="button" class="slot' + (active ? ' slot--active' : '') + '" data-slot="' + i + '" aria-pressed="' + !!active + '">' + s.time + '</button>';
-    }).join('');
-  }
-  slotsEl.addEventListener('click', function (e) {
-    var b = e.target.closest('[data-slot]');
-    if (!b) return;
-    state.slot = state.days[state.day].slots[+b.dataset.slot];
-    renderSlots();
-    renderDuration();
-    updateSummary();
-  });
-
   function plural(n, one, few, many) {
     var m10 = n % 10, m100 = n % 100;
     if (m10 === 1 && m100 !== 11) return one;
@@ -291,44 +226,194 @@
     if (m) out.push(m + ' мин');
     return out.join(' ');
   }
-  function addMinutes(hhmm, minutes) {
-    var p = hhmm.split(':'), t = (+p[0]) * 60 + (+p[1]) + minutes;
-    t = t % (24 * 60);
-    return String(Math.floor(t / 60)).padStart(2, '0') + ':' + String(t % 60).padStart(2, '0');
+
+  function renderHalls(halls) {
+    hallTabs.hidden = halls.length < 2;
+    hallTabs.innerHTML = halls.map(function (h, i) {
+      return '<button type="button" role="tab" class="tab' + (i === state.hall ? ' tab--active' : '') +
+        '" data-hall="' + i + '" aria-selected="' + (i === state.hall) + '">' + esc(h.name) + '</button>';
+    }).join('');
+  }
+  hallTabs.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-hall]');
+    if (!b || +b.dataset.hall === state.hall) return;
+    state.hall = +b.dataset.hall;
+    state.selected = {};
+    state.day = null;
+    renderHalls(content.halls);
+    loadMonth(state.month);
+  });
+
+  function fetchMonth(month) {
+    var key = state.hall + '|' + (month || '');
+    if (state.cache[key]) return Promise.resolve(state.cache[key]);
+    var params = { action: 'slots', hall: state.hall };
+    if (month) params.month = month;
+    var p = DEMO ? Promise.resolve(demoMonth(month)) : apiGet(params);
+    return p.then(function (res) {
+      if (res.ok && !res.closed) state.cache[state.hall + '|' + res.month] = res;
+      return res;
+    });
   }
 
-  function renderDuration() {
-    var s = state.slot;
-    durWrap.hidden = !s;
-    if (!s) return;
-    var prev = +durSel.value || 1;
-    var opts = '';
-    for (var n = 1; n <= s.maxHours; n++) {
-      var mins = n * s.stepMinutes;
-      opts += '<option value="' + n + '">' + durationLabel(mins) + ' (' + s.time + '–' + addMinutes(s.time, mins) + ')</option>';
-    }
-    durSel.innerHTML = opts;
-    durSel.value = Math.min(prev, s.maxHours);
+  function loadMonth(month) {
+    form.hidden = false;
+    $('#bookingBody').classList.remove('booking__body--closed');
+    calEl.innerHTML = '<p class="muted">Загружаем расписание…</p>';
+    return fetchMonth(month).then(function (res) {
+      if (!res.ok) throw new Error(res.error);
+      if (res.closed) return renderClosed(res.reopens);
+      state.data = res;
+      state.month = res.month;
+      state.meta = res;
+      renderHint();
+      if (!state.day || state.day.slice(0, 7) !== res.month || !dayData(state.day)) {
+        state.day = res.days.length ? res.days[0].date : null;
+      }
+      renderCalendar();
+      renderDay();
+      updateSummary();
+    }).catch(function () {
+      calEl.innerHTML = '<p class="muted">Не удалось загрузить расписание. Позвоните нам: ' + phoneLinkHtml() + '</p>';
+      daySlots.hidden = true;
+    });
   }
-  durSel.addEventListener('change', updateSummary);
+
+  function renderClosed(reopens) {
+    form.hidden = true;
+    daySlots.hidden = true;
+    $('#bookingBody').classList.add('booking__body--closed');
+    calEl.innerHTML = '<div class="closed-note"><b>Онлайн-запись откроется ' + esc(reopens) + '.</b>' +
+      '<span>Сейчас мы составляем расписание на следующий месяц. Если нужно срочно — позвоните: ' + phoneLinkHtml() + '</span></div>';
+  }
+
+  function renderHint() {
+    var m = state.meta, n = m.minDaysAhead;
+    var lead = n === 0 ? '' : n === 1 ? 'Запись — не позже чем за день. ' : 'Запись — не позже чем за ' + n + ' ' + plural(n, 'день', 'дня', 'дней') + '. ';
+    $('#bookingHint').textContent = lead + 'Выберите дату и один или несколько промежутков по ' + m.stepMinutes +
+      ' минут — можно с перерывами и в разные дни. Оплата на месте — мы свяжемся с вами для подтверждения.';
+  }
+
+  function dayData(date) {
+    if (!state.data) return null;
+    for (var i = 0; i < state.data.days.length; i++) if (state.data.days[i].date === date) return state.data.days[i];
+    return null;
+  }
+
+  function selectedDates() {
+    var out = {};
+    Object.keys(state.selected).forEach(function (k) { out[state.selected[k].date] = (out[state.selected[k].date] || 0) + 1; });
+    return out;
+  }
+
+  function renderCalendar() {
+    var d = state.data, month = d.month;
+    var first = parseDate(month), year = first.getFullYear(), mon = first.getMonth();
+    var daysInMonth = new Date(year, mon + 1, 0).getDate();
+    var offset = (first.getDay() + 6) % 7; // понедельник — первый день недели
+    var avail = {};
+    d.days.forEach(function (x) { avail[x.date] = true; });
+    var sel = selectedDates();
+
+    var html = '<div class="cal__head">' +
+      '<button type="button" class="cal__nav" data-nav="-1" aria-label="Предыдущий месяц"' + (month <= d.minMonth ? ' disabled' : '') + '>‹</button>' +
+      '<b class="cal__title">' + MONTHS_NOM[mon] + ' ' + year + '</b>' +
+      '<button type="button" class="cal__nav" data-nav="1" aria-label="Следующий месяц"' + (month >= d.maxMonth ? ' disabled' : '') + '>›</button>' +
+      '</div><div class="cal__grid">' +
+      ['пн', 'вт', 'ср', 'чт', 'пт', 'сб', 'вс'].map(function (w) { return '<span class="cal__wd">' + w + '</span>'; }).join('');
+    for (var i = 0; i < offset; i++) html += '<span></span>';
+    for (var day = 1; day <= daysInMonth; day++) {
+      var key = month + '-' + String(day).padStart(2, '0');
+      var cls = 'cal__day' + (avail[key] ? '' : ' cal__day--off') + (key === state.day ? ' cal__day--active' : '') + (sel[key] ? ' cal__day--sel' : '');
+      html += '<button type="button" class="' + cls + '" data-date="' + key + '"' + (avail[key] ? '' : ' disabled') +
+        ' aria-label="' + esc(dateLabel(key)) + (sel[key] ? ', выбрано промежутков: ' + sel[key] : '') + '">' + day + '</button>';
+    }
+    html += '</div>';
+    if (!d.days.length) html += '<p class="muted cal__empty">В этом месяце свободного времени нет' + (month < d.maxMonth ? ' — посмотрите следующий.' : '.') + '</p>';
+    calEl.innerHTML = html;
+  }
+
+  calEl.addEventListener('click', function (e) {
+    var nav = e.target.closest('[data-nav]');
+    if (nav && !nav.disabled) return loadMonth(shiftMonth(state.month, +nav.dataset.nav));
+    var b = e.target.closest('[data-date]');
+    if (!b || b.disabled) return;
+    state.day = b.dataset.date;
+    renderCalendar();
+    renderDay();
+    if (window.innerWidth < 900) daySlots.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  });
+
+  function renderDay() {
+    var day = state.day && dayData(state.day);
+    daySlots.hidden = !day;
+    if (!day) return;
+    var step = state.meta.stepMinutes;
+    $('#dayTitle').textContent = dateLabel(day.date);
+    slotsEl.innerHTML = day.slots.map(function (s) {
+      var active = !!state.selected[s.start];
+      var cls = 'slot' + (s.free ? '' : ' slot--busy') + (active ? ' slot--active' : '');
+      return '<button type="button" class="' + cls + '" data-start="' + s.start + '" data-time="' + s.time + '"' +
+        (s.free ? '' : ' disabled') + ' aria-pressed="' + active + '" title="' + s.time + '–' + addMinutes(s.time, step) +
+        (s.free ? '' : ' · занято') + '">' + s.time + '</button>';
+    }).join('');
+  }
+
+  slotsEl.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-start]');
+    if (!b || b.disabled) return;
+    var k = b.dataset.start;
+    if (state.selected[k]) delete state.selected[k];
+    else state.selected[k] = { date: state.day, time: b.dataset.time, ms: new Date(k).getTime() };
+    renderDay();
+    renderCalendar();
+    updateSummary();
+  });
+
+  /** Выбранное → [{date, ranges:[{from, to, minutes}]}], соседние промежутки склеены. */
+  function selectionGroups() {
+    var step = state.meta ? state.meta.stepMinutes : 30;
+    var items = Object.keys(state.selected).map(function (k) { return state.selected[k]; }).sort(function (a, b) { return a.ms - b.ms; });
+    var groups = [], last = null, cur = null;
+    items.forEach(function (it) {
+      if (!cur || cur.date !== it.date) { cur = { date: it.date, ranges: [] }; groups.push(cur); last = null; }
+      if (last && it.ms - last.endMs === 0) {
+        last.minutes += step; last.endMs += step * 60000; last.to = addMinutes(last.from, last.minutes);
+      } else {
+        last = { from: it.time, to: addMinutes(it.time, step), minutes: step, endMs: it.ms + step * 60000 };
+        cur.ranges.push(last);
+      }
+    });
+    return groups;
+  }
 
   function updateSummary() {
-    var s = state.slot;
-    var summary = $('#summary');
-    if (!s) {
-      durWrap.hidden = true;
-      summary.textContent = 'Сначала выберите время';
+    var summary = $('#summary'), clearBtn = $('#clearSel');
+    var groups = selectionGroups();
+    var total = Object.keys(state.selected).length * (state.meta ? state.meta.stepMinutes : 30);
+    clearBtn.hidden = !total;
+    if (!total) {
+      summary.innerHTML = 'Выберите в календаре дату и время';
       summary.classList.remove('form__summary--ready');
       submitBtn.disabled = true;
       return;
     }
-    var steps = +durSel.value || 1;
-    var label = state.days[state.day].label.replace(' · ', ', ');
-    var hall = content.halls.length > 1 ? content.halls[state.hall].name + ' · ' : '';
-    summary.textContent = hall + label + ', ' + s.time + '–' + addMinutes(s.time, steps * s.stepMinutes);
+    var hall = content.halls.length > 1 ? '<div class="sum__hall">' + esc(content.halls[state.hall].name) + '</div>' : '';
+    summary.innerHTML = hall + groups.map(function (g) {
+      return '<div class="sum__row"><b>' + esc(dateLabel(g.date)) + '</b><span>' +
+        g.ranges.map(function (r) { return r.from + '–' + r.to; }).join(', ') + '</span></div>';
+    }).join('') + '<div class="sum__total">Всего: ' + durationLabel(total) + '</div>';
     summary.classList.add('form__summary--ready');
     submitBtn.disabled = false;
   }
+
+  $('#clearSel').addEventListener('click', function () {
+    state.selected = {};
+    showError('');
+    renderDay();
+    renderCalendar();
+    updateSummary();
+  });
 
   // маска телефона для российских номеров
   var phoneInput = form.elements.phone;
@@ -359,8 +444,13 @@
     var f = form.elements;
     var name = f.name.value.trim();
     var phoneDigits = f.phone.value.replace(/\D/g, '');
+    var starts = Object.keys(state.selected);
+    var m = state.meta;
 
-    if (!state.slot) return showError('Выберите дату и время');
+    if (!starts.length) return showError('Выберите дату и время');
+    if (m && starts.length * m.stepMinutes > m.maxMinutes) return showError('В одной заявке можно выбрать не больше ' + durationLabel(m.maxMinutes) + '. Для большего — позвоните нам.');
+    var short = selectionGroups().some(function (g) { return g.ranges.some(function (r) { return m && r.minutes < m.minMinutes; }); });
+    if (short) return showError('Минимальная длительность одного отрезка — ' + durationLabel(m.minMinutes) + '.');
     if (name.length < 2) { f.name.focus(); return showError('Укажите имя'); }
     if (phoneDigits.length < 10 || phoneDigits.length > 15) { f.phone.focus(); return showError('Проверьте номер телефона'); }
     if (!f.consent.checked) return showError('Нужно согласие на обработку персональных данных');
@@ -368,8 +458,7 @@
     var payload = {
       action: 'book',
       hall: state.hall,
-      start: state.slot.start,
-      steps: +durSel.value || 1,
+      slots: starts,
       name: name,
       phone: f.phone.value.trim(),
       comment: f.comment.value.trim(),
@@ -380,70 +469,84 @@
 
     submitBtn.disabled = true;
     submitBtn.textContent = 'Отправляем…';
+    var summaryLines = selectionGroups().map(function (g) {
+      return dateLabel(g.date) + ', ' + g.ranges.map(function (r) { return r.from + '–' + r.to; }).join(', ');
+    });
     var req = DEMO
-      ? new Promise(function (r) { setTimeout(function () { r({ ok: true }); }, 700); })
+      ? new Promise(function (r) { setTimeout(function () { r({ ok: true, when: summaryLines }); }, 700); })
       : apiPost(payload);
 
     req.then(function (res) {
       if (!res.ok) {
         showError(res.error || 'Ошибка. Попробуйте ещё раз или позвоните нам.');
-        if (res.slotTaken) loadSlots();
+        if (res.slotTaken) {
+          state.cache = {};
+          var keep = state.selected;
+          loadMonth(state.month).then(function () {
+            // убрать из выбора то, что стало занятым
+            Object.keys(keep).forEach(function (k) {
+              var dd = dayData(keep[k].date);
+              if (!dd) return;
+              var s = dd.slots.filter(function (x) { return x.start === k; })[0];
+              if (!s || !s.free) delete state.selected[k];
+            });
+            renderDay(); renderCalendar(); updateSummary();
+          });
+        }
         return;
       }
-      $('#doneWhen').textContent = res.when || $('#summary').textContent;
+      var when = Array.isArray(res.when) ? res.when : [res.when || ''];
+      $('#doneWhen').innerHTML = when.map(esc).join('<br>');
       $('#bookingBody').hidden = true;
       $('#bookingDone').hidden = false;
       $('#booking').scrollIntoView({ behavior: 'smooth', block: 'start' });
       form.reset();
+      state.selected = {};
+      state.cache = {};
     }).catch(function () {
       showError('Нет связи с сервером. Попробуйте ещё раз или позвоните нам.');
     }).then(function () {
       submitBtn.textContent = 'Записаться';
-      submitBtn.disabled = !state.slot;
+      submitBtn.disabled = !Object.keys(state.selected).length;
     });
   });
 
   $('#bookAgain').addEventListener('click', function () {
     $('#bookingDone').hidden = true;
     $('#bookingBody').hidden = false;
-    loadSlots();
+    updateSummary();
+    loadMonth(state.month);
   });
 
   // ───────────── демо-режим (без бэкенда) ─────────────
-  function demoSlots() {
+  function demoMonth(month) {
     if (/[?&]closed\b/.test(location.search)) return { ok: true, days: [], closed: true, reopens: '1 декабря' };
-    var MONTHS = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
-    var WD = ['вс', 'пн', 'вт', 'ср', 'чт', 'пт', 'сб'];
-    var now = new Date(), earliest = now.getTime() + 3600e3, horizon = now.getTime() + 48 * 3600e3;
-    var days = [];
-    for (var d = 0; d < 3; d++) {
-      var base = new Date(now.getFullYear(), now.getMonth(), now.getDate() + d);
-      var free = [];
-      for (var h = 9; h < 22; h++) {
-        var t = new Date(base); t.setHours(h);
-        var busy = (h * 7 + d * 3) % 5 === 0;
-        free.push(!busy && t.getTime() >= earliest && t.getTime() <= horizon ? t : null);
+    var now = new Date();
+    var first = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 2);
+    var ym = function (d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'); };
+    var minMonth = ym(first), maxMonth = ym(new Date(now.getFullYear(), now.getMonth() + 24, 1));
+    if (!month || month < minMonth) month = minMonth;
+    if (month > maxMonth) month = maxMonth;
+    var start = parseDate(month), days = [];
+    for (var d = new Date(start); d.getMonth() === start.getMonth(); d.setDate(d.getDate() + 1)) {
+      if (d < first) continue;
+      var date = ym(d) + '-' + String(d.getDate()).padStart(2, '0'), slots = [];
+      for (var m = 9 * 60; m < 22 * 60; m += 30) {
+        var t = new Date(d); t.setHours(Math.floor(m / 60), m % 60, 0, 0);
+        var seed = (d.getDate() * 31 + m / 30 * 7) % 11;
+        slots.push({ start: t.toISOString(), time: addMinutes('00:00', m), free: seed > 2 });
       }
-      var slots = [];
-      free.forEach(function (t, i) {
-        if (!t) return;
-        var n = 0;
-        while (i + n < free.length && free[i + n] && n < 8) n++;
-        slots.push({ start: t.toISOString(), time: String(t.getHours()).padStart(2, '0') + ':00', maxHours: n, stepMinutes: 60 });
-      });
-      if (slots.length) {
-        days.push({
-          label: ['Сегодня', 'Завтра', 'Послезавтра'][d] + ' · ' + base.getDate() + ' ' + MONTHS[base.getMonth()] + ', ' + WD[base.getDay()],
-          slots: slots
-        });
-      }
+      days.push({ date: date, slots: slots });
     }
-    return { ok: true, days: days };
+    return {
+      ok: true, month: month, minMonth: minMonth, maxMonth: maxMonth, firstDate: ym(first) + '-' + String(first.getDate()).padStart(2, '0'),
+      minDaysAhead: 2, stepMinutes: 30, minMinutes: 30, maxMinutes: 720, days: days
+    };
   }
 
   // ───────────── старт ─────────────
   renderContent();
-  loadSlots();
+  loadMonth();
 
   if (!DEMO) {
     apiGet({ action: 'content' }).then(function (res) {

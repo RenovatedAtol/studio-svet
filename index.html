@@ -87,24 +87,25 @@
     <div class="container booking">
       <div class="booking__head">
         <h2>Онлайн-запись</h2>
-        <p class="muted">Выберите свободное время на ближайшие двое суток. Оплата на месте — мы свяжемся с вами для подтверждения.</p>
+        <p class="muted" id="bookingHint">Выберите дату и один или несколько промежутков по 30 минут — можно с перерывами и в разные дни. Оплата на месте — мы свяжемся с вами для подтверждения.</p>
       </div>
 
       <div class="booking__body" id="bookingBody">
         <div class="booking__pick">
           <div class="tabs" id="hallTabs" role="tablist" aria-label="Зал" hidden></div>
-          <div class="tabs" id="dayTabs" role="tablist" aria-label="День"></div>
-          <div class="slots" id="slots" aria-live="polite">
-            <p class="muted">Загружаем свободное время…</p>
+          <div class="cal" id="cal" aria-live="polite">
+            <p class="muted">Загружаем расписание…</p>
           </div>
-          <div class="duration" id="durationWrap" hidden>
-            <label for="duration">Длительность</label>
-            <select id="duration"></select>
+          <div class="day-slots" id="daySlots" hidden>
+            <h3 class="day-slots__title" id="dayTitle"></h3>
+            <div class="slots" id="slots"></div>
+            <p class="legend"><span class="lg lg--free"></span>свободно <span class="lg lg--sel"></span>выбрано <span class="lg lg--busy"></span>занято</p>
           </div>
         </div>
 
         <form class="form" id="bookingForm" novalidate>
-          <div class="form__summary" id="summary">Сначала выберите время</div>
+          <div class="form__summary" id="summary">Выберите в календаре дату и время</div>
+          <button type="button" class="link-btn" id="clearSel" hidden>Сбросить выбор</button>
 
           <label class="field">
             <span>Имя</span>
