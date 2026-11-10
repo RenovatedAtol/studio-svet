@@ -363,18 +363,67 @@
     if (window.innerWidth < 900) daySlots.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   });
 
+  // ───────────── световой день: восход/закат для выбранной даты ─────────────
+  var LOC = (window.SITE_CONFIG && window.SITE_CONFIG.STUDIO_LOCATION) || { lat: 54.7104, lng: 20.4522, utcOffset: 120 };
+
+  /** Восход и закат (минуты от полуночи по времени студии). Формула восхода — Wikipedia «Sunrise equation». */
+  function sunTimes(dateStr) {
+    var p = dateStr.split('-'), rad = Math.PI / 180;
+    var J = Date.UTC(+p[0], +p[1] - 1, +p[2], 12) / 86400000 + 2440587.5;
+    var Js = Math.round(J - 2451545.0 + 0.0008) - LOC.lng / 360;
+    var M = ((357.5291 + 0.98560028 * Js) % 360 + 360) % 360;
+    var C = 1.9148 * Math.sin(M * rad) + 0.02 * Math.sin(2 * M * rad) + 0.0003 * Math.sin(3 * M * rad);
+    var lam = (M + C + 180 + 102.9372) % 360;
+    var Jt = 2451545.0 + Js + 0.0053 * Math.sin(M * rad) - 0.0069 * Math.sin(2 * lam * rad);
+    var dec = Math.asin(Math.sin(lam * rad) * Math.sin(23.44 * rad));
+    var cosH = (Math.sin(-0.833 * rad) - Math.sin(LOC.lat * rad) * Math.sin(dec)) / (Math.cos(LOC.lat * rad) * Math.cos(dec));
+    if (cosH > 1 || cosH < -1) return null;
+    var H = Math.acos(cosH) / rad;
+    var toMin = function (Jd) { var m = (Jd - 2440587.5) * 1440 + LOC.utcOffset; return Math.round(((m % 1440) + 1440) % 1440); };
+    return { rise: toMin(Jt - H / 360), set: toMin(Jt + H / 360) };
+  }
+  function toMinutes(hhmm) { var p = hhmm.split(':'); return (+p[0]) * 60 + (+p[1]); }
+  function fmtMin(m) { return String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'); }
+
+  /** Какой свет в студии в этот промежуток: дневной, мягкий (час после восхода и до заката) или темно. */
+  function lightAt(startMin, step, sun) {
+    if (!sun) return '';
+    var end = startMin + step;
+    if (end <= sun.rise || startMin >= sun.set) return 'night';
+    if (startMin < sun.rise + 60 || end > sun.set - 60) return 'golden';
+    return 'day';
+  }
+
+  function renderLightDay(day, step) {
+    var el = $('#lightDay'), sun = sunTimes(day.date);
+    if (!sun || !day.slots.length) { el.hidden = true; return; }
+    var first = toMinutes(day.slots[0].time), last = toMinutes(day.slots[day.slots.length - 1].time) + step;
+    el.hidden = false;
+    el.innerHTML = '<p class="lightday__text">Восход ' + fmtMin(sun.rise) + ', закат ' + fmtMin(sun.set) +
+      (sun.set < last ? '. После заката в студии только искусственный свет.' : '.') + '</p>' +
+      '<div class="lightday__bar" aria-hidden="true">' + day.slots.map(function (s) {
+        return '<span class="lightday__seg--' + lightAt(toMinutes(s.time), step, sun) + '" style="flex:1"></span>';
+      }).join('') + '</div>' +
+      '<div class="lightday__scale" aria-hidden="true"><span>' + fmtMin(first) + '</span><span>' + fmtMin(last) + '</span></div>';
+    return sun;
+  }
+
+  var LIGHT_LABEL = { day: 'дневной свет', golden: 'мягкий свет у восхода или заката', night: 'темно, только студийный свет' };
+
   function renderDay() {
     var day = state.day && dayData(state.day);
     daySlots.hidden = !day;
     if (!day) return;
     var step = state.meta.stepMinutes;
     $('#dayTitle').textContent = dateLabel(day.date);
+    var sun = renderLightDay(day, step);
     slotsEl.innerHTML = day.slots.map(function (s) {
       var active = !!state.selected[s.start];
-      var cls = 'slot' + (s.free ? '' : ' slot--busy') + (active ? ' slot--active' : '');
+      var light = lightAt(toMinutes(s.time), step, sun);
+      var cls = 'slot' + (light ? ' light--' + light : '') + (s.free ? '' : ' slot--busy') + (active ? ' slot--active' : '');
       return '<button type="button" class="' + cls + '" data-start="' + s.start + '" data-time="' + s.time + '"' +
         (s.free ? '' : ' disabled') + ' aria-pressed="' + active + '" title="' + s.time + '–' + addMinutes(s.time, step) +
-        (s.free ? '' : ' · занято') + '">' + s.time + '</button>';
+        (light ? ', ' + LIGHT_LABEL[light] : '') + (s.free ? '' : ', занято') + '">' + s.time + '</button>';
     }).join('');
   }
 

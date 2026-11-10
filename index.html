@@ -14,7 +14,7 @@
   <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Commissioner:wght@200..600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
   <script type="application/ld+json">
   {
@@ -48,7 +48,6 @@
   <section class="hero" id="hero">
     <div class="hero__bg" id="heroBg" style="background-image:url('img/photos/01.jpg')"></div>
     <div class="container"><div class="hero__content">
-      <p class="eyebrow">Аренда фотостудии · от 1 часа</p>
       <h1 data-text="hero_title">Фотостудия «Свет»</h1>
       <p class="hero__subtitle" data-text="hero_subtitle">Светлые залы с дневным светом и профессиональным оборудованием в центре города. Аренда от 1 часа.</p>
       <div class="hero__actions">
@@ -98,8 +97,15 @@
           </div>
           <div class="day-slots" id="daySlots" hidden>
             <h3 class="day-slots__title" id="dayTitle"></h3>
+            <div class="lightday" id="lightDay" hidden></div>
             <div class="slots" id="slots"></div>
-            <p class="legend"><span class="lg lg--free"></span>свободно <span class="lg lg--sel"></span>выбрано <span class="lg lg--busy"></span>занято</p>
+            <p class="legend">
+              <span><i class="lg lg--day"></i>дневной свет из окон</span>
+              <span><i class="lg lg--golden"></i>мягкий свет у восхода и заката</span>
+              <span><i class="lg lg--night"></i>темно, только студийный свет</span>
+              <span><i class="lg lg--sel"></i>выбрано</span>
+              <span><i class="lg lg--busy"></i>занято</span>
+            </p>
           </div>
         </div>
 
