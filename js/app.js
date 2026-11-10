@@ -35,7 +35,7 @@
   var content = window.DEFAULT_CONTENT;
 
   function photoUrl(p, width) {
-    if (p.src) return p.src;
+    if (p.src) return width <= 800 && p.thumb ? p.thumb : p.src;
     return 'https://lh3.googleusercontent.com/d/' + p.id + '=w' + width;
   }
 

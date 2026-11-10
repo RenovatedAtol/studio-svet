@@ -16,11 +16,95 @@ window.DEFAULT_CONTENT = {
     { group: 'Оборудование', name: 'Генератор дыма', price: '500 ₽', unit: 'съёмка', note: '' }
   ],
   photos: [
-    'Белый зал', 'Белый зал', 'Белый зал', 'Тёмный зал', 'Тёмный зал', 'Тёмный зал',
-    'Циклорама', 'Циклорама', 'Гримёрная', 'Интерьер', 'Интерьер', 'Интерьер',
-    'Свет', 'Свет', 'Реквизит', 'Лофт-зона', 'Лофт-зона', 'Окна'
-  ].map(function (alt, i) {
-    var n = String(i + 1).padStart(2, '0');
-    return { src: 'img/photo-' + n + '.svg', alt: alt };
-  })
+    {
+      "src": "img/photos/01.jpg",
+      "thumb": "img/photos/01-sm.jpg",
+      "alt": "Белый зал"
+    },
+    {
+      "src": "img/photos/02.jpg",
+      "thumb": "img/photos/02-sm.jpg",
+      "alt": "Белый зал"
+    },
+    {
+      "src": "img/photos/03.jpg",
+      "thumb": "img/photos/03-sm.jpg",
+      "alt": "Белый зал"
+    },
+    {
+      "src": "img/photos/04.jpg",
+      "thumb": "img/photos/04-sm.jpg",
+      "alt": "Тёмный зал"
+    },
+    {
+      "src": "img/photos/05.jpg",
+      "thumb": "img/photos/05-sm.jpg",
+      "alt": "Тёмный зал"
+    },
+    {
+      "src": "img/photos/06.jpg",
+      "thumb": "img/photos/06-sm.jpg",
+      "alt": "Тёмный зал"
+    },
+    {
+      "src": "img/photos/07.jpg",
+      "thumb": "img/photos/07-sm.jpg",
+      "alt": "Циклорама"
+    },
+    {
+      "src": "img/photos/08.jpg",
+      "thumb": "img/photos/08-sm.jpg",
+      "alt": "Циклорама"
+    },
+    {
+      "src": "img/photos/09.jpg",
+      "thumb": "img/photos/09-sm.jpg",
+      "alt": "Гримёрная"
+    },
+    {
+      "src": "img/photos/10.jpg",
+      "thumb": "img/photos/10-sm.jpg",
+      "alt": "Зона отдыха"
+    },
+    {
+      "src": "img/photos/11.jpg",
+      "thumb": "img/photos/11-sm.jpg",
+      "alt": "Кухня"
+    },
+    {
+      "src": "img/photos/12.jpg",
+      "thumb": "img/photos/12-sm.jpg",
+      "alt": "Интерьер"
+    },
+    {
+      "src": "img/photos/13.jpg",
+      "thumb": "img/photos/13-sm.jpg",
+      "alt": "Оборудование"
+    },
+    {
+      "src": "img/photos/14.jpg",
+      "thumb": "img/photos/14-sm.jpg",
+      "alt": "Оборудование"
+    },
+    {
+      "src": "img/photos/15.jpg",
+      "thumb": "img/photos/15-sm.jpg",
+      "alt": "Реквизит"
+    },
+    {
+      "src": "img/photos/16.jpg",
+      "thumb": "img/photos/16-sm.jpg",
+      "alt": "Лофт-зона"
+    },
+    {
+      "src": "img/photos/17.jpg",
+      "thumb": "img/photos/17-sm.jpg",
+      "alt": "Лофт-зона"
+    },
+    {
+      "src": "img/photos/18.jpg",
+      "thumb": "img/photos/18-sm.jpg",
+      "alt": "Окна"
+    }
+  ]
 };
