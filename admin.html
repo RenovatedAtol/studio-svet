@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Админка — фотостудия</title>
+  <title>Интерфейс администратора — фотостудия</title>
   <meta name="robots" content="noindex, nofollow">
   <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -16,7 +16,7 @@
 
 <header class="header">
   <div class="container header__inner">
-    <a href="index.html" class="logo">Админка</a>
+    <a href="index.html" class="logo">Интерфейс администратора</a>
     <nav class="admin-nav" id="adminNav" hidden>
       <a href="#bookings">Записи</a>
       <a href="#planner">Календарь</a>
@@ -30,14 +30,14 @@
   <!-- ВХОД -->
   <section class="container login" id="loginView" hidden>
     <form class="card login__card" id="loginForm">
-      <h1>Вход для администратора</h1>
+      <h1>Вход в интерфейс администратора</h1>
       <label class="field">
         <span>Пароль</span>
         <input type="password" name="password" autocomplete="current-password" required autofocus>
       </label>
       <p class="form__error" id="loginError" role="alert" hidden></p>
       <button class="btn btn--block" type="submit" id="loginBtn">Войти</button>
-      <p class="muted small">Пароль задаётся в Google-таблице: меню «📸 Фотостудия → Пароль для админки сайта».</p>
+      <p class="muted small">Пароль задаётся в Google-таблице: меню «📸 Фотостудия → Пароль администратора сайта».</p>
     </form>
   </section>
 
@@ -76,8 +76,8 @@
       <div class="section-head">
         <h2>Календарь</h2>
       </div>
-      <p class="muted">Выделите свободные промежутки и запишите клиента или закройте время. Ограничения сайта
-        («не раньше чем за 2 дня», закрытие в конце месяца) здесь не действуют.</p>
+      <p class="muted">Выберите свободные интервалы времени, затем запишите клиента или закройте время. Ограничения,
+        действующие для клиентов на сайте (запись не позднее чем за 2 дня, закрытие записи в конце месяца), в данном разделе не применяются.</p>
       <div class="planner">
         <div class="card planner__cal">
           <div class="tabs" id="hallTabs" role="tablist" hidden></div>
@@ -85,7 +85,7 @@
           <div class="day-slots" id="daySlots" hidden>
             <div class="day-slots__head">
               <h3 class="day-slots__title" id="dayTitle"></h3>
-              <button type="button" class="link-btn" id="selectDay">Выбрать всё свободное</button>
+              <button type="button" class="link-btn" id="selectDay">Выбрать всё свободное время</button>
             </div>
             <div class="slots" id="slots"></div>
             <p class="legend">
@@ -111,7 +111,7 @@
               <label class="check"><input type="checkbox" name="equipment"><span>Нужно доп. оборудование</span></label>
             </div>
             <div data-kind-only="block" hidden>
-              <label class="field"><span>Причина (видна только вам)</span><input type="text" name="reason" maxlength="100" placeholder="например: ремонт, своя съёмка"></label>
+              <label class="field"><span>Причина (видна только администраторам)</span><input type="text" name="reason" maxlength="100" placeholder="например: технические работы, внутренняя съёмка"></label>
             </div>
             <p class="form__error" id="createError" role="alert" hidden></p>
             <p class="form__ok" id="createOk" hidden></p>
@@ -131,14 +131,14 @@
       <div class="card">
         <ul class="tg-list" id="tgList"><li class="muted">Загрузка…</li></ul>
         <form class="tg-add" id="tgAdd">
-          <input type="text" name="username" placeholder="@username" autocomplete="off" aria-label="Ник в Telegram">
+          <input type="text" name="username" placeholder="@username" autocomplete="off" aria-label="Имя пользователя в Telegram">
           <button type="submit" class="btn btn--small">Добавить</button>
         </form>
         <p class="form__error" id="tgError" role="alert" hidden></p>
       </div>
       <div class="card tg-seen" id="tgSeen" hidden>
-        <h3>Недавно писали боту</h3>
-        <p class="muted small">Например, если у человека нет @ника — пусть напишет боту, и его можно добавить отсюда.</p>
+        <h3>Недавние обращения к боту</h3>
+        <p class="muted small">Пользователя без имени пользователя (@username) можно назначить администратором после того, как он отправит боту любое сообщение.</p>
         <ul class="tg-list" id="tgSeenList"></ul>
       </div>
     </section>

@@ -59,7 +59,7 @@
     e.preventDefault();
     var btn = $('#loginBtn');
     btn.disabled = true;
-    btn.textContent = 'Проверяем…';
+    btn.textContent = 'Проверка…';
     showErr($('#loginError'), '');
     fetch(API, { method: 'POST', body: JSON.stringify({ action: 'admin', op: 'login', password: this.elements.password.value }) })
       .then(function (r) { return r.json(); })
@@ -70,7 +70,7 @@
         $('#loginForm').reset();
         start(res);
       })
-      .catch(function () { showErr($('#loginError'), 'Нет связи с сервером'); })
+      .catch(function () { showErr($('#loginError'), 'Нет соединения с сервером'); })
       .then(function () { btn.disabled = false; btn.textContent = 'Войти'; });
   });
 
@@ -101,7 +101,7 @@
     });
   }
 
-  var SOURCE = { site: 'сайт', admin: 'админка', calendar: 'календарь' };
+  var SOURCE = { site: 'сайт', admin: 'администратор', calendar: 'календарь' };
 
   /** Кнопка «ссылка для клиента» — у будущих записей, где клиент ещё не подключил напоминания. */
   function linkBtn(e) {
@@ -122,8 +122,8 @@
       b.disabled = false;
       if (!res.ok) return alert(res.error);
       var msg = 'Подключите напоминания о записи в Telegram: ' + res.url;
-      copyText(msg).then(function () { toast('Ссылка скопирована — отправьте её клиенту'); })
-        .catch(function () { prompt('Скопируйте и отправьте клиенту:', msg); });
+      copyText(msg).then(function () { toast('Ссылка скопирована. Направьте её клиенту.'); })
+        .catch(function () { prompt('Скопируйте ссылку и направьте её клиенту:', msg); });
     }).catch(function () { b.disabled = false; });
   });
 
@@ -154,7 +154,7 @@
         '<td class="cell-actions">' + linkBtn(e) + (e.recurring ? '<small class="muted" title="Повторяющееся — меняется в Google Календаре">повтор.</small>' :
           '<button type="button" class="icon-btn" data-del="' + esc(e.id) + '" data-hall="' + e.hall + '" title="Удалить">✕</button>') + '</td>' +
         '</tr>';
-    }).join('') : '<tr><td colspan="8" class="muted">Ничего не найдено</td></tr>';
+    }).join('') : '<tr><td colspan="8" class="muted">Записи не найдены</td></tr>';
     $('#listCount').textContent = rows.length ? 'Показано: ' + rows.length : '';
   }
 
@@ -182,8 +182,8 @@
 
   function deleteEvent(id, hall) {
     var e = findEvent(id);
-    var what = e ? (e.type === 'block' ? 'закрытое время' : 'запись «' + (e.name || e.title) + '»') + ' — ' + e.dateLabel + ', ' + e.time : 'событие';
-    if (!confirm('Удалить ' + what + '?\n\nСобытие удалится и из Google Календаря. Клиенту никто не сообщит — позвоните ему сами.')) return;
+    var what = e ? (e.type === 'block' ? 'закрытое время' : 'запись «' + (e.name || e.title) + '»') + ' (' + e.dateLabel + ', ' + e.time + ')' : 'событие';
+    if (!confirm('Удалить ' + what + '?\n\nСобытие будет удалено также из Google Календаря. Клиент об этом уведомлён не будет — при необходимости свяжитесь с ним.')) return;
     call('delete', { id: id, hall: hall }).then(function (res) {
       if (!res.ok) return alert(res.error);
       toast('Удалено');
@@ -196,7 +196,7 @@
     if (b) deleteEvent(b.dataset.del, +b.dataset.hall);
   });
 
-  // ───────────── календарь админа ─────────────
+  // ───────────── календарь администратора ─────────────
   var planner = { hall: 0, month: null, data: null, day: null, selected: {}, kind: 'booking', cache: {} };
 
   function ymNow() { var d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'); }
@@ -447,7 +447,7 @@
     var btn = $('#createBtn');
     btn.disabled = true;
     var label = btn.textContent;
-    btn.textContent = 'Сохраняем…';
+    btn.textContent = 'Сохранение…';
     call('create', {
       hall: planner.hall, kind: planner.kind, slots: slots,
       name: f.name.value.trim(), phone: f.phone.value.trim(), comment: f.comment.value.trim(), equipment: f.equipment.checked,
@@ -462,7 +462,7 @@
       $('#createForm').reset();
       loadList();
       return reloadPlanner();
-    }).catch(function (e2) { showErr(err, e2.message || 'Нет связи с сервером'); })
+    }).catch(function (e2) { showErr(err, e2.message || 'Нет соединения с сервером'); })
       .then(function () { btn.textContent = label; btn.disabled = !Object.keys(planner.selected).length; });
   });
 
@@ -470,30 +470,30 @@
   function renderTg(res) {
     var bot = res.bot ? '<a href="https://t.me/' + esc(res.bot) + '" target="_blank" rel="noopener">@' + esc(res.bot) + '</a>' : 'бота';
     $('#tgHint').innerHTML =
-      '<b>Админам</b> (список ниже) приходит каждая новая запись с сайта' +
-      (res.digestTime ? ' и каждый день в ' + esc(res.digestTime) + ' — сводка записей на завтра' : '') + '.<br>' +
-      '<b>Клиентам</b> ' + (res.clientReminders ? 'бот напоминает за сутки и за час до записи — если клиент подключился: после записи на сайте ему показывается кнопка, ' +
-        'а для записей из админки нажмите 🔗 и отправьте клиенту ссылку. 🔔 — клиент подключён.' : 'напоминания выключены (лист «Параметры записи» → client_reminders).') +
-      '<br><small>Добавить админа: впишите его @ник, а он пусть откроет ' + bot + ' и нажмёт «Старт» — подключится в течение минуты.</small>' +
-      (res.configured ? '' : '<br><b>Бот ещё не подключён: в Google-таблице выберите «📸 Фотостудия → 2. Telegram: ввести токен бота».</b>') +
+      '<b>Администраторам</b> (список ниже) направляются уведомления о каждой новой записи с сайта' +
+      (res.digestTime ? ', а также ежедневно в ' + esc(res.digestTime) + ' — сводка записей на следующий день' : '') + '.<br>' +
+      '<b>Клиентам</b> ' + (res.clientReminders ? 'бот направляет напоминания за сутки и за час до записи при условии подключения: после записи на сайте клиенту предлагается кнопка подключения; ' +
+        'для записей, внесённых администратором, нажмите 🔗 и направьте ссылку клиенту. Значок 🔔 означает, что клиент подключён.' : 'напоминания отключены (лист «Параметры записи», параметр client_reminders).') +
+      '<br><small>Чтобы добавить администратора, укажите его имя пользователя (@username). Затем ему необходимо открыть ' + bot + ' и нажать «Старт»; подключение выполняется в течение минуты.</small>' +
+      (res.configured ? '' : '<br><b>Telegram-бот не подключён. В Google-таблице выберите «📸 Фотостудия → 2. Telegram: ввести токен бота».</b>') +
       (res.warning ? '<br><small>Telegram: ' + esc(res.warning) + '</small>' : '');
     $('#tgList').innerHTML = res.recipients.length ? res.recipients.map(function (r) {
       var who = r.name ? esc(r.name) + (r.username ? ' <span class="muted">@' + esc(r.username) + '</span>' : '') : (r.username ? '@' + esc(r.username) : 'чат ' + esc(r.key));
       return '<li><span class="tg-who">' + who + '</span>' +
-        (r.connected ? '<span class="badge badge--ok">✓ подключён</span>' : '<span class="badge badge--wait">ждём «Старт» у бота</span>') +
+        (r.connected ? '<span class="badge badge--ok">✓ подключён</span>' : '<span class="badge badge--wait">ожидается подключение</span>') +
         '<button type="button" class="icon-btn" data-tg-remove="' + esc(r.key) + '" title="Убрать">✕</button></li>';
-    }).join('') : '<li class="muted">Пока никого — уведомления никуда не уходят.</li>';
+    }).join('') : '<li class="muted">Список пуст — уведомления не направляются.</li>';
     var seen = res.seen || [];
     $('#tgSeen').hidden = !seen.length;
     $('#tgSeenList').innerHTML = seen.map(function (x) {
       return '<li><span class="tg-who">' + esc(x.name || x.username || x.id) + (x.username ? ' <span class="muted">@' + esc(x.username) + '</span>' : '') +
         (x.group ? ' <span class="badge">группа</span>' : '') + '</span>' +
-        '<button type="button" class="btn btn--small btn--ghost" data-tg-seen="' + esc(x.id) + '">Сделать админом</button></li>';
+        '<button type="button" class="btn btn--small btn--ghost" data-tg-seen="' + esc(x.id) + '">Назначить администратором</button></li>';
     }).join('');
   }
   $('#tgSeenList').addEventListener('click', function (e) {
     var b = e.target.closest('[data-tg-seen]');
-    if (!b || !confirm('Этот человек будет получать уведомления о всех записях (имена и телефоны клиентов). Добавить?')) return;
+    if (!b || !confirm('Пользователь получит уведомления обо всех записях, включая имена и телефоны клиентов. Назначить его администратором?')) return;
     call('tg_add_seen', { id: b.dataset.tgSeen }).then(function (res) { if (res.ok) renderTg(res); else alert(res.error); });
   });
   function loadTg() {
@@ -511,19 +511,19 @@
   });
   $('#tgList').addEventListener('click', function (e) {
     var b = e.target.closest('[data-tg-remove]');
-    if (!b || !confirm('Убрать получателя из списка уведомлений?')) return;
+    if (!b || !confirm('Исключить получателя из списка уведомлений?')) return;
     call('tg_remove', { key: b.dataset.tgRemove }).then(function (res) { if (res.ok) renderTg(res); });
   });
   $('#tgTest').addEventListener('click', function () {
     call('tg_test').then(function (res) {
       if (res.ok) toast('Отправлено получателям: ' + res.sent);
-      else alert('Не отправилось: ' + res.error);
+      else alert('Не удалось отправить: ' + res.error);
     });
   });
 
   // ───────────── старт ─────────────
   if (!API) {
-    showLogin('Админка работает только с подключённым бэкендом (js/config.js → API_URL).');
+    showLogin('Интерфейс администратора доступен только при подключённом сервере (js/config.js → API_URL).');
   } else if (token) {
     call('meta').then(function (res) { if (res.ok) start(res); }).catch(function () {});
   } else {
