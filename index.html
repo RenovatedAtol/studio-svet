@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title data-text="seo_title">Фотостудия «Свет» — аренда фотостудии почасово</title>
+  <meta name="description" data-attr-content="seo_description" content="Аренда фотостудии с дневным светом от 1 часа. Онлайн-запись, профессиональный свет, циклорама.">
+  <meta name="theme-color" content="#f6f3ee">
+  <link rel="canonical" href="https://example.ru/">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Фотостудия «Свет»">
+  <meta property="og:description" content="Аренда фотостудии от 1 часа. Онлайн-запись на ближайшие 2 дня.">
+  <meta property="og:image" content="https://example.ru/img/photo-01.svg">
+  <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "LocalBusiness",
+    "name": "Фотостудия «Свет»",
+    "description": "Аренда фотостудии почасово",
+    "url": "https://example.ru/",
+    "telephone": "+7 900 000-00-00",
+    "address": { "@type": "PostalAddress", "streetAddress": "ул. Примерная, д. 1", "addressLocality": "Москва", "addressCountry": "RU" }
+  }
+  </script>
+</head>
+<body>
+
+<header class="header" id="top">
+  <div class="container header__inner">
+    <a href="#top" class="logo" data-text="studio_name">Фотостудия «Свет»</a>
+    <nav class="nav" id="nav" aria-label="Основное меню">
+      <a href="#gallery">Галерея</a>
+      <a href="#prices">Цены</a>
+      <a href="#contacts">Контакты</a>
+      <a href="#booking" class="btn btn--small">Записаться</a>
+    </nav>
+    <button class="burger" id="burger" aria-label="Открыть меню" aria-expanded="false" aria-controls="nav"><span></span><span></span></button>
+  </div>
+</header>
+
+<main>
+  <!-- ГЛАВНАЯ -->
+  <section class="hero" id="hero">
+    <div class="hero__bg" id="heroBg" style="background-image:url('img/photo-01.svg')"></div>
+    <div class="container"><div class="hero__content">
+      <p class="eyebrow">Аренда фотостудии · от 1 часа</p>
+      <h1 data-text="hero_title">Фотостудия «Свет»</h1>
+      <p class="hero__subtitle" data-text="hero_subtitle">Светлые залы с дневным светом и профессиональным оборудованием в центре города. Аренда от 1 часа.</p>
+      <div class="hero__actions">
+        <a href="#booking" class="btn btn--large">Записаться</a>
+        <a href="#gallery" class="btn btn--ghost btn--large">Смотреть залы</a>
+      </div>
+    </div></div>
+  </section>
+
+  <!-- О СТУДИИ -->
+  <section class="section about">
+    <div class="container"><div class="about__inner">
+      <h2 data-text="about_title">О студии</h2>
+      <p data-text="about_text">Три зала общей площадью 180 м², окна в пол, циклорама, гримёрная и кухня. Подходим для портретов, семейных и предметных съёмок, видео и подкастов.</p></div>
+    </div>
+  </section>
+
+  <!-- ГАЛЕРЕЯ -->
+  <section class="section" id="gallery">
+    <div class="container">
+      <h2>Залы и интерьер</h2>
+      <div class="gallery" id="galleryGrid"></div>
+    </div>
+  </section>
+
+  <!-- УСЛУГИ И ЦЕНЫ -->
+  <section class="section section--alt" id="prices">
+    <div class="container">
+      <h2>Услуги и цены</h2>
+      <div class="prices" id="pricesWrap"></div>
+    </div>
+  </section>
+
+  <!-- ОНЛАЙН-ЗАПИСЬ -->
+  <section class="section" id="booking">
+    <div class="container booking">
+      <div class="booking__head">
+        <h2>Онлайн-запись</h2>
+        <p class="muted">Выберите свободное время на ближайшие двое суток. Оплата на месте — мы свяжемся с вами для подтверждения.</p>
+      </div>
+
+      <div class="booking__body" id="bookingBody">
+        <div class="booking__pick">
+          <div class="tabs" id="hallTabs" role="tablist" aria-label="Зал" hidden></div>
+          <div class="tabs" id="dayTabs" role="tablist" aria-label="День"></div>
+          <div class="slots" id="slots" aria-live="polite">
+            <p class="muted">Загружаем свободное время…</p>
+          </div>
+          <div class="duration" id="durationWrap" hidden>
+            <label for="duration">Длительность</label>
+            <select id="duration"></select>
+          </div>
+        </div>
+
+        <form class="form" id="bookingForm" novalidate>
+          <div class="form__summary" id="summary">Сначала выберите время</div>
+
+          <label class="field">
+            <span>Имя</span>
+            <input type="text" name="name" autocomplete="name" required minlength="2" maxlength="80">
+          </label>
+          <label class="field">
+            <span>Телефон</span>
+            <input type="tel" name="phone" autocomplete="tel" inputmode="tel" required placeholder="+7 (___) ___-__-__">
+          </label>
+          <label class="field">
+            <span>Комментарий</span>
+            <textarea name="comment" rows="3" maxlength="1000" placeholder="Тип съёмки, количество человек, пожелания"></textarea>
+          </label>
+
+          <label class="check">
+            <input type="checkbox" name="equipment">
+            <span>Нужно доп. оборудование</span>
+          </label>
+          <label class="check">
+            <input type="checkbox" name="consent" required>
+            <span>Согласен(на) на <a href="privacy.html" target="_blank">обработку персональных данных</a></span>
+          </label>
+
+          <!-- скрытое поле-ловушка для спам-ботов -->
+          <input type="text" name="website" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+
+          <p class="form__error" id="formError" role="alert" hidden></p>
+          <button type="submit" class="btn btn--large btn--block" id="submitBtn" disabled>Записаться</button>
+        </form>
+      </div>
+
+      <div class="booking__done" id="bookingDone" hidden>
+        <div class="done__icon" aria-hidden="true">✓</div>
+        <h3>Спасибо! Мы свяжемся с вами.</h3>
+        <p class="muted" id="doneWhen"></p>
+        <button class="btn btn--ghost" id="bookAgain" type="button">Записаться ещё</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- КОНТАКТЫ -->
+  <section class="section section--alt" id="contacts">
+    <div class="container contacts">
+      <div class="contacts__info">
+        <h2>Контакты</h2>
+        <dl class="contacts__list">
+          <dt>Адрес</dt>
+          <dd data-text="address">г. Москва, ул. Примерная, д. 1, 3 этаж</dd>
+          <dt>Режим работы</dt>
+          <dd data-text="hours_text">Ежедневно с 9:00 до 22:00</dd>
+          <dt>Телефон</dt>
+          <dd><a data-link="phone" href="tel:+79000000000">+7 900 000-00-00</a></dd>
+          <dt data-show="email">Почта</dt>
+          <dd data-show="email"><a data-link="email" href="mailto:hello@example.ru">hello@example.ru</a></dd>
+        </dl>
+        <div class="socials">
+          <a data-link="whatsapp" href="#" target="_blank" rel="noopener" class="chip">WhatsApp</a>
+          <a data-link="telegram" href="#" target="_blank" rel="noopener" class="chip">Telegram</a>
+          <a data-link="max" href="#" target="_blank" rel="noopener" class="chip">MAX</a>
+          <a data-link="vk" href="#" target="_blank" rel="noopener" class="chip">ВКонтакте</a>
+          <a data-link="instagram" href="#" target="_blank" rel="noopener" class="chip">Instagram</a>
+        </div>
+      </div>
+      <div class="map" id="map"></div>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  <div class="container footer__inner">
+    <span>© <span id="year"></span> <span data-text="studio_name">Фотостудия «Свет»</span></span>
+    <a href="privacy.html">Политика обработки персональных данных</a>
+  </div>
+</footer>
+
+<!-- Просмотр фото на весь экран -->
+<div class="lightbox" id="lightbox" hidden role="dialog" aria-modal="true" aria-label="Просмотр фото">
+  <button class="lightbox__close" id="lbClose" aria-label="Закрыть">×</button>
+  <button class="lightbox__nav lightbox__prev" id="lbPrev" aria-label="Предыдущее фото">‹</button>
+  <img id="lbImg" alt="">
+  <button class="lightbox__nav lightbox__next" id="lbNext" aria-label="Следующее фото">›</button>
+  <div class="lightbox__counter" id="lbCounter"></div>
+</div>
+
+<script src="js/config.js"></script>
+<script src="js/content.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

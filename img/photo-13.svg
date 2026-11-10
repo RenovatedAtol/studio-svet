@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1067" viewBox="0 0 1600 1067">
+<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2b2a28"/><stop offset="1" stop-color="#57524b"/></linearGradient>
+<radialGradient id="l" cx="0.42" cy="0.34" r=".6"><stop offset="0" stop-color="#fff" stop-opacity=".35"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient></defs>
+<rect width="100%" height="100%" fill="url(#g)"/><rect width="100%" height="100%" fill="url(#l)"/>
+<rect x="0" y="768" width="1600" height="299" fill="#000" opacity=".06"/>
+<text x="50%" y="50%" text-anchor="middle" font-family="Georgia,serif" font-size="88" fill="#f2efe9" opacity=".75">Свет</text>
+<text x="50%" y="647" text-anchor="middle" font-family="sans-serif" font-size="35" fill="#f2efe9" opacity=".5">фото-заглушка 13</text></svg>
