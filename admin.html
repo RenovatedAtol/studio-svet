@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Админка — фотостудия</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/admin.css">
+</head>
+<body class="admin scrolled">
+
+<header class="header">
+  <div class="container header__inner">
+    <a href="index.html" class="logo">Админка</a>
+    <nav class="admin-nav" id="adminNav" hidden>
+      <a href="#bookings">Записи</a>
+      <a href="#planner">Календарь</a>
+      <a href="#telegram">Telegram</a>
+      <button type="button" class="btn btn--small btn--ghost" id="logoutBtn">Выйти</button>
+    </nav>
+  </div>
+</header>
+
+<main class="admin-main">
+  <!-- ВХОД -->
+  <section class="container login" id="loginView" hidden>
+    <form class="card login__card" id="loginForm">
+      <h1>Вход для администратора</h1>
+      <label class="field">
+        <span>Пароль</span>
+        <input type="password" name="password" autocomplete="current-password" required autofocus>
+      </label>
+      <p class="form__error" id="loginError" role="alert" hidden></p>
+      <button class="btn btn--block" type="submit" id="loginBtn">Войти</button>
+      <p class="muted small">Пароль задаётся в Google-таблице: меню «📸 Фотостудия → Пароль для админки сайта».</p>
+    </form>
+  </section>
+
+  <div id="app" hidden>
+    <!-- СПИСОК ЗАПИСЕЙ -->
+    <section class="container admin-section" id="bookings">
+      <div class="section-head">
+        <h2>Записи</h2>
+        <button type="button" class="btn btn--small btn--ghost" id="reloadList">Обновить</button>
+      </div>
+      <div class="toolbar">
+        <div class="seg" id="periodSeg" role="tablist">
+          <button type="button" class="seg__btn seg__btn--active" data-period="upcoming">Предстоящие</button>
+          <button type="button" class="seg__btn" data-period="past">Прошедшие (60 дней)</button>
+        </div>
+        <div class="seg" id="typeSeg" role="tablist">
+          <button type="button" class="seg__btn seg__btn--active" data-type="all">Все</button>
+          <button type="button" class="seg__btn" data-type="booking">Записи</button>
+          <button type="button" class="seg__btn" data-type="block">Закрытое время</button>
+        </div>
+        <input type="search" id="search" class="search" placeholder="Поиск: имя, телефон, комментарий">
+      </div>
+      <div class="card table-wrap">
+        <table class="table" id="listTable">
+          <thead>
+            <tr><th>Дата</th><th>Время</th><th>Клиент</th><th>Телефон</th><th>Обор.</th><th>Комментарий</th><th>Откуда</th><th></th></tr>
+          </thead>
+          <tbody id="listBody"><tr><td colspan="8" class="muted">Загрузка…</td></tr></tbody>
+        </table>
+      </div>
+      <p class="muted small" id="listCount"></p>
+    </section>
+
+    <!-- КАЛЕНДАРЬ -->
+    <section class="container admin-section" id="planner">
+      <div class="section-head">
+        <h2>Календарь</h2>
+      </div>
+      <p class="muted">Выделите свободные промежутки и запишите клиента или закройте время. Ограничения сайта
+        («не раньше чем за 2 дня», закрытие в конце месяца) здесь не действуют.</p>
+      <div class="planner">
+        <div class="card planner__cal">
+          <div class="tabs" id="hallTabs" role="tablist" hidden></div>
+          <div class="cal" id="cal"><p class="muted">Загрузка…</p></div>
+          <div class="day-slots" id="daySlots" hidden>
+            <div class="day-slots__head">
+              <h3 class="day-slots__title" id="dayTitle"></h3>
+              <button type="button" class="link-btn" id="selectDay">Выбрать всё свободное</button>
+            </div>
+            <div class="slots" id="slots"></div>
+            <p class="legend">
+              <span class="lg lg--free"></span>свободно <span class="lg lg--sel"></span>выбрано
+              <span class="lg lg--booking"></span>запись <span class="lg lg--block"></span>закрыто
+            </p>
+            <div class="day-events" id="dayEvents"></div>
+          </div>
+        </div>
+
+        <div class="card planner__panel">
+          <div class="form__summary" id="selSummary">Выберите свободное время в календаре</div>
+          <button type="button" class="link-btn" id="clearSel" hidden>Сбросить выбор</button>
+          <div class="seg seg--full" id="kindSeg">
+            <button type="button" class="seg__btn seg__btn--active" data-kind="booking">Записать клиента</button>
+            <button type="button" class="seg__btn" data-kind="block">Закрыть время</button>
+          </div>
+          <form id="createForm" class="form-plain" novalidate>
+            <div data-kind-only="booking">
+              <label class="field"><span>Имя клиента</span><input type="text" name="name" maxlength="80"></label>
+              <label class="field"><span>Телефон</span><input type="tel" name="phone" maxlength="30" placeholder="необязательно"></label>
+              <label class="field"><span>Комментарий</span><textarea name="comment" rows="2" maxlength="1000"></textarea></label>
+              <label class="check"><input type="checkbox" name="equipment"><span>Нужно доп. оборудование</span></label>
+            </div>
+            <div data-kind-only="block" hidden>
+              <label class="field"><span>Причина (видна только вам)</span><input type="text" name="reason" maxlength="100" placeholder="например: ремонт, своя съёмка"></label>
+            </div>
+            <p class="form__error" id="createError" role="alert" hidden></p>
+            <p class="form__ok" id="createOk" hidden></p>
+            <button type="submit" class="btn btn--block" id="createBtn" disabled>Записать</button>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- TELEGRAM -->
+    <section class="container admin-section" id="telegram">
+      <div class="section-head">
+        <h2>Уведомления в Telegram</h2>
+        <button type="button" class="btn btn--small btn--ghost" id="tgTest">Отправить тест</button>
+      </div>
+      <p class="muted" id="tgHint">Кому приходят уведомления о новых записях с сайта и напоминания за час до начала.</p>
+      <div class="card">
+        <ul class="tg-list" id="tgList"><li class="muted">Загрузка…</li></ul>
+        <form class="tg-add" id="tgAdd">
+          <input type="text" name="username" placeholder="@username" autocomplete="off" aria-label="Ник в Telegram">
+          <button type="submit" class="btn btn--small">Добавить</button>
+        </form>
+        <p class="form__error" id="tgError" role="alert" hidden></p>
+      </div>
+    </section>
+  </div>
+</main>
+
+<div class="toast" id="toast" hidden></div>
+
+<script src="js/config.js"></script>
+<script src="js/admin.js"></script>
+</body>
+</html>
