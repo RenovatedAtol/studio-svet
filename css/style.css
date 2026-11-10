@@ -262,3 +262,12 @@ textarea { resize: vertical; }
 .tg-sub--ok { background: #e3efe3; color: #2f6b34; font-weight: 500; }
 .btn--tg { background: #2aabee; border-color: #2aabee; color: #fff; }
 .btn--tg:hover { background: #1e96d4; border-color: #1e96d4; }
+
+/* календарь, пока грузится другой месяц */
+.cal { position: relative; }
+.cal--loading .cal__grid, .cal--loading .cal__empty { opacity: .35; pointer-events: none; transition: opacity .15s; }
+.cal--loading::after {
+  content: ''; position: absolute; left: 50%; top: 55%; width: 28px; height: 28px; margin: -14px 0 0 -14px;
+  border: 3px solid var(--line); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }

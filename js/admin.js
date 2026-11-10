@@ -233,14 +233,35 @@
     return loadMonth(planner.month);
   }
 
+  var inflight = {};
+  function fetchAdminMonth(month) {
+    var key = planner.hall + '|' + month;
+    if (planner.cache[key]) return Promise.resolve(planner.cache[key]);
+    if (inflight[key]) return inflight[key];
+    inflight[key] = call('month', { hall: planner.hall, month: month }).then(function (res) {
+      delete inflight[key];
+      if (res.ok) planner.cache[key] = res;
+      return res;
+    }, function (err) { delete inflight[key]; throw err; });
+    return inflight[key];
+  }
+
   function loadMonth(month) {
     month = month || ymNow();
-    var key = planner.hall + '|' + month;
-    var p = planner.cache[key] ? Promise.resolve(planner.cache[key]) : call('month', { hall: planner.hall, month: month });
-    if (!planner.data) $('#cal').innerHTML = '<p class="muted">Загрузка…</p>';
+    var p = fetchAdminMonth(month);
+    var cal = $('#cal');
+    if (!planner.data) cal.innerHTML = '<p class="muted">Загрузка…</p>';
+    else {
+      cal.classList.add('cal--loading');
+      var title = cal.querySelector('.cal__title'), md = parseDate(month);
+      if (title) title.textContent = MONTHS_NOM[md.getMonth()] + ' ' + md.getFullYear();
+    }
     return p.then(function (res) {
+      cal.classList.remove('cal--loading');
       if (!res.ok) throw new Error(res.error);
-      planner.cache[key] = res;
+      // соседние месяцы — заранее
+      fetchAdminMonth(shiftMonth(res.month, 1)).catch(function () {});
+      fetchAdminMonth(shiftMonth(res.month, -1)).catch(function () {});
       planner.data = res;
       planner.month = res.month;
       if (!planner.day || planner.day.slice(0, 7) !== res.month || !dayData(planner.day)) {
@@ -251,6 +272,7 @@
       renderDay();
       updateSelection();
     }).catch(function (err) {
+      cal.classList.remove('cal--loading');
       $('#cal').innerHTML = '<p class="muted">Не удалось загрузить: ' + esc(err.message) + '</p>';
     });
   }

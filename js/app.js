@@ -244,23 +244,37 @@
     loadMonth(state.month);
   });
 
+  var inflight = {};
   function fetchMonth(month) {
     var key = state.hall + '|' + (month || '');
     if (state.cache[key]) return Promise.resolve(state.cache[key]);
+    if (inflight[key]) return inflight[key];           // уже грузится (например, предзагрузкой)
     var params = { action: 'slots', hall: state.hall };
     if (month) params.month = month;
     var p = DEMO ? Promise.resolve(demoMonth(month)) : apiGet(params);
-    return p.then(function (res) {
+    inflight[key] = p.then(function (res) {
+      delete inflight[key];
       if (res.ok && !res.closed) state.cache[state.hall + '|' + res.month] = res;
       return res;
-    });
+    }, function (err) { delete inflight[key]; throw err; });
+    return inflight[key];
+  }
+
+  /** Тихо подгрузить соседние месяцы, чтобы переключение было мгновенным. */
+  function prefetchAround(res) {
+    if (res.month < res.maxMonth) fetchMonth(shiftMonth(res.month, 1)).catch(function () {});
+    if (res.month > res.minMonth) fetchMonth(shiftMonth(res.month, -1)).catch(function () {});
   }
 
   function loadMonth(month) {
     form.hidden = false;
     $('#bookingBody').classList.remove('booking__body--closed');
-    calEl.innerHTML = '<p class="muted">Загружаем расписание…</p>';
+    if (state.data && calEl.querySelector('.cal__grid')) calEl.classList.add('cal--loading');   // календарь остаётся на месте
+    else calEl.innerHTML = '<p class="muted">Загружаем расписание…</p>';
+    var title = calEl.querySelector('.cal__title');
+    if (title && month) { var md = parseDate(month); title.textContent = MONTHS_NOM[md.getMonth()] + ' ' + md.getFullYear(); }
     return fetchMonth(month).then(function (res) {
+      calEl.classList.remove('cal--loading');
       if (!res.ok) throw new Error(res.error);
       if (res.closed) return renderClosed(res.reopens);
       state.data = res;
@@ -273,7 +287,9 @@
       renderCalendar();
       renderDay();
       updateSummary();
+      prefetchAround(res);
     }).catch(function () {
+      calEl.classList.remove('cal--loading');
       calEl.innerHTML = '<p class="muted">Не удалось загрузить расписание. Позвоните нам: ' + phoneLinkHtml() + '</p>';
       daySlots.hidden = true;
     });
