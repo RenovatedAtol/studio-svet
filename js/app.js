@@ -262,7 +262,10 @@
 
   /** Тихо подгрузить соседние месяцы, чтобы переключение было мгновенным. */
   function prefetchAround(res) {
-    if (res.month < res.maxMonth) fetchMonth(shiftMonth(res.month, 1)).catch(function () {});
+    [1, 2].forEach(function (n) {
+      var m = shiftMonth(res.month, n);
+      if (m <= res.maxMonth) fetchMonth(m).catch(function () {});
+    });
     if (res.month > res.minMonth) fetchMonth(shiftMonth(res.month, -1)).catch(function () {});
   }
 

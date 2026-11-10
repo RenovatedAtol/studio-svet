@@ -261,6 +261,7 @@
       if (!res.ok) throw new Error(res.error);
       // соседние месяцы — заранее
       fetchAdminMonth(shiftMonth(res.month, 1)).catch(function () {});
+      fetchAdminMonth(shiftMonth(res.month, 2)).catch(function () {});
       fetchAdminMonth(shiftMonth(res.month, -1)).catch(function () {});
       planner.data = res;
       planner.month = res.month;
