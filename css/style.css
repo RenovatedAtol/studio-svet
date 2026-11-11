@@ -77,24 +77,17 @@ h3 { font-weight: 500; font-size: 1.3rem; letter-spacing: -.01em; }
 .burger[aria-expanded="true"] span:first-child { transform: translateY(3.5px) rotate(45deg); }
 .burger[aria-expanded="true"] span:last-child { transform: translateY(-3.5px) rotate(-45deg); }
 
-/* ───── первый экран: текст на белом слева, студия справа до края ───── */
-/* Колонки: [поле страницы][текст — 5/12 сетки сайта][фото — до правого края окна].
-   Поле считается от ширины блока (%), а не окна (vw), поэтому текст всегда стоит на той же
-   линии, что логотип и остальные разделы, и не наезжает на фото ни на каком мониторе. */
-.hero {
-  display: grid; align-items: center;
-  grid-template-columns: max(20px, (100% - 1180px) / 2) minmax(0, 5fr) minmax(0, 7fr);
-  padding-top: var(--header-h);
-}
-.hero > .container { grid-column: 2; grid-row: 1; width: auto; margin: 0;
-  padding: 48px clamp(28px, 4vw, 72px) 48px 0; }
+/* ───── первый экран ─────
+   Текст и фото стоят в общей сетке сайта (.container): левый край — по логотипу,
+   правый край фото — по кнопке «Записаться» в шапке и по галерее. Фото — целиком, в своих пропорциях. */
+.hero { padding-top: calc(var(--header-h) + clamp(24px, 4vw, 56px)); }
+.hero__grid { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: clamp(32px, 5vw, 80px); align-items: center; }
 .hero__content { max-width: 34rem; min-width: 0; }
-.hero h1 { font-size: clamp(2.6rem, 4.6vw, 5.2rem); margin-bottom: .35em; overflow-wrap: break-word; }
+.hero h1 { font-size: clamp(2.6rem, 4.2vw, 4.6rem); margin-bottom: .35em; overflow-wrap: break-word; }
 .hero__subtitle { font-size: 1.2rem; line-height: 1.55; color: var(--muted); margin: 0 0 2em; max-width: 30em; }
 .hero__actions { display: flex; gap: 12px; flex-wrap: wrap; }
-/* Фото целиком, в своих пропорциях. Обрезка только если окно ниже самого фото (очень низкий экран). */
-.hero__media { grid-column: 3; grid-row: 1; margin: 0; background: var(--seamless); }
-.hero__media img { width: 100%; height: auto; max-height: calc(100svh - var(--header-h)); object-fit: cover; cursor: zoom-in; }
+.hero__media { margin: 0; border-radius: 3px; overflow: hidden; background: var(--seamless); }
+.hero__media img { width: 100%; height: auto; max-height: calc(100svh - var(--header-h) - 56px); object-fit: cover; cursor: zoom-in; }
 
 /* ───── секции ───── */
 .section { padding: clamp(64px, 9vw, 112px) 0; }
@@ -284,11 +277,11 @@ textarea { resize: vertical; }
 
 /* ───── адаптив ───── */
 @media (max-width: 900px) {
-  .hero { grid-template-columns: 1fr; }
-  .hero__media { grid-column: 1; grid-row: 1; }
+  .hero { padding-top: calc(var(--header-h) + 16px); }
+  .hero__grid { grid-template-columns: 1fr; gap: 28px; }
+  .hero__media { order: -1; }
   .hero__media img { max-height: none; }
   .about__inner { grid-template-columns: 1fr; }
-  .hero > .container { grid-column: 1; grid-row: 2; width: min(1180px, 100% - 40px); margin: 0 auto; padding: 32px 0 8px; }
   .hero h1 { font-size: clamp(2.6rem, 11vw, 4rem); }
   .booking__body, .contacts { grid-template-columns: 1fr; }
   .form { position: static; }
